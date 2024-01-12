@@ -1,0 +1,7 @@
+@inproceedings{REPO296,
+    author = "Gujarati, Arpan and Karimi, Reza and Alzayat, Safya and Hao, Wei and Kaufmann, Antoine and Vigfusson, Ymir and Mace, Jonathan",
+    booktitle = "14th USENIX Symposium on Operating Systems Design and Implementation (OSDI 20)",
+    pages = "443--462",
+    title = "{Serving DNNs Like Clockwork: Performance Predictability from the Bottom Up}",
+    year = "2020"
+}
