@@ -1,0 +1,17 @@
+#!/bin/bash
+
+ARGV=("$@")
+ARGC=("$#")
+
+if [ $ARGC -ne 2 ]; then
+    echo  "Invalid number of arguments, usage: build [gitlab_username] [gitlab_password]"
+    exit
+fi
+
+GITLAB_USERNAME=${ARGV[0]}
+GITLAB_PASSWORD=${ARGV[1]}
+
+TAG=clockwork:artifact
+echo "Building the Docker image..."
+sudo docker pull nvidia/cuda:11.0-base
+sudo docker build --build-arg ncpus=$(nproc) --build-arg repo_username="${GITLAB_USERNAME}" --build-arg repo_password="${GITLAB_PASSWORD}" -f Dockerfile -t $TAG .

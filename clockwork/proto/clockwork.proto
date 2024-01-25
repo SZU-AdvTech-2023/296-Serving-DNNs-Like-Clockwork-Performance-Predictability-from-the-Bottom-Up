@@ -1,0 +1,263 @@
+// Some engineers at Google have come to the conclusion that using "required"
+// does more harm than good; they prefer to use only "optional" and "repeated".
+// However, this view is not universal. TODO
+// Source: https://developers.google.com/protocol-buffers/docs/cpptutorial
+
+syntax = "proto2";
+
+package clockwork;
+
+enum RequestType {
+  REQ_UPLOAD_MODEL = 1;
+  REQ_INFERENCE = 2;
+  REQ_LOAD_REMOTE_MODEL = 3;
+  REQ_EVICT = 4;
+  REQ_LS = 5;
+
+  RSP_UPLOAD_MODEL = 101;
+  RSP_INFERENCE = 102;
+  RSP_LOAD_REMOTE_MODEL = 103;
+  RSP_EVICT = 104;
+  RSP_LS = 105;
+}
+
+message RequestHeaderProto {
+  optional int32 user_id = 1;
+  optional int32 user_request_id = 2;
+}
+
+message ResponseHeaderProto {
+  optional int32 user_request_id = 1;
+  optional int32 status = 2;
+  optional string message = 3;
+}
+
+message ModelUploadReqProto {
+  required RequestHeaderProto header = 1;
+  required uint32 batchsize = 3;
+  required uint64 so_len = 4;
+  required uint64 clockwork_len = 5;
+  required uint64 params_len = 6;
+}
+
+message ModelUploadRspProto {
+  required ResponseHeaderProto header = 1;
+  required uint32 model_id = 2;
+  required uint64 input_size = 3;
+  required uint64 output_size = 4;
+}
+
+
+message ModelInferenceReqProto {
+  required RequestHeaderProto header = 1;
+  required uint32 model_id = 2;
+  required uint32 batch_size = 3;
+  required float slo_factor = 4;
+}
+
+message ModelInferenceRspProto {
+  required ResponseHeaderProto header = 1;
+  required uint32 model_id = 2;
+  required uint32 batch_size = 3;
+}
+
+message EvictReqProto {
+  required RequestHeaderProto header = 1;
+  required uint32 model_id = 2;
+}
+
+message EvictRspProto {
+  required ResponseHeaderProto header = 1;
+}
+
+message LoadModelFromDiskReqProto {
+  required RequestHeaderProto header = 1;
+  required string remote_path = 2;
+  required int32 no_of_copies = 3;
+}
+
+message LoadModelFromDiskRspProto {
+  required ResponseHeaderProto header = 1;
+  required uint32 model_id = 2;
+  required uint64 input_size = 3;
+  required uint64 output_size = 4;
+  required int32 copies_created = 5;
+}
+
+message LSReqProto {
+  required RequestHeaderProto header = 1;
+}
+
+message ClientModelInfoProto {
+  required uint32 model_id = 1;
+  required string remote_path = 2;
+  required uint64 input_size = 3;
+  required uint64 output_size = 4;
+}
+
+message LSRspProto {
+  required ResponseHeaderProto header = 1;
+  repeated ClientModelInfoProto models = 2;
+}
+
+enum ActionType {
+  ACT_LOAD_MODEL_FROM_DISK = 1;
+  ACT_LOAD_WEIGHTS = 2;
+  ACT_INFER = 3;
+  ACT_EVICT_WEIGHTS = 4;
+  ACT_CLEAR_CACHE = 5;
+  ACT_GET_WORKER_STATE = 6;
+
+  RES_ERROR = 100;
+  RES_LOAD_MODEL_FROM_DISK = 101;
+  RES_LOAD_WEIGHTS = 102;
+  RES_INFER = 103;
+  RES_EVICT_WEIGHTS = 104;
+  RES_CLEAR_CACHE = 105;
+  RES_GET_WORKER_STATE = 106;
+}
+
+message ErrorResultProto {
+  required int32 action_id = 1;
+  required int32 action_type = 2;
+  required int32 status = 3;
+  required string message = 4;
+  required fixed64 action_received = 5;
+  required fixed64 result_sent = 6;
+}
+
+message TimingProto {
+  required fixed64 begin = 1;
+  required fixed64 end = 2;
+  required fixed64 duration = 3;
+}
+
+message LoadModelFromDiskActionProto {
+  required int32 action_id = 1;
+  required int32 model_id = 2;
+  required string model_path = 3;
+  required fixed64 earliest = 4;
+  required fixed64 latest = 5;
+  required int32 no_of_copies = 6;
+  required uint32 max_batch_size = 7;
+  required uint64 max_exec_duration = 8;
+}
+
+message LoadModelFromDiskResultProto {
+  required int32 action_id = 1;
+  required TimingProto timing = 2;
+  required uint64 input_size = 3;
+  required uint64 output_size = 4;
+  repeated uint32 supported_batch_sizes = 5;
+  required uint64 weights_size_in_cache = 6;
+  required uint32 num_weights_pages = 7;
+  required uint64 weights_load_time_nanos = 8;
+  repeated uint64 batch_size_exec_times_nanos = 9;
+  required int32 copies_created = 10;
+  required fixed64 action_received = 11;
+  required fixed64 result_sent = 12;
+}
+
+message LoadWeightsActionProto {
+  required int32 action_id = 1;
+  required int32 model_id = 2;
+  required uint32 gpu_id = 3;
+  required fixed64 earliest = 4;
+  required fixed64 latest = 5;
+  required uint64 expected_duration = 6;
+}
+
+message LoadWeightsResultProto {
+  required int32 action_id = 1;
+  required TimingProto timing = 2;
+  required fixed64 action_received = 3;
+  required fixed64 result_sent = 4;
+}
+
+message EvictWeightsActionProto {
+  required int32 action_id = 1;
+  required int32 model_id = 2;
+  required uint32 gpu_id = 3;
+  required fixed64 earliest = 4;
+  required fixed64 latest = 5;
+}
+
+message EvictWeightsResultProto {
+  required int32 action_id = 1;
+  required TimingProto timing = 2;
+  required fixed64 action_received = 3;
+  required fixed64 result_sent = 4;
+}
+
+message InferActionProto {
+  required int32 action_id = 1;
+  required int32 model_id = 2;
+  required uint32 gpu_id = 3;
+  required fixed64 earliest = 4;
+  required fixed64 latest = 5;
+  required uint64 expected_duration = 6;
+  required uint32 batch_size = 7;
+  repeated uint32 input_sizes = 8;
+}
+
+message InferResultProto {
+  required int32 action_id = 1;
+  required TimingProto copy_input_timing = 2;
+  required TimingProto exec_timing = 3;
+  required TimingProto copy_output_timing = 4;
+  required uint32 gpu_id = 5;
+  required uint32 gpu_clock_before = 6;
+  required uint32 gpu_clock = 7;
+  required fixed64 action_received = 8;
+  required fixed64 result_sent = 9;
+}
+
+message ClearCacheActionProto {
+  required int32 action_id = 1;
+}
+
+message ClearCacheResultProto {
+  required int32 action_id = 1;
+  required uint64 action_received = 2;
+  required uint64 result_sent = 3;
+}
+
+message GetWorkerStateActionProto {
+  required int32 action_id = 1;
+}
+
+message ModelInfoProto {
+  required int32 id = 1;
+  required string source = 2;
+  required uint64 input_size = 3;
+  required uint64 output_size = 4;
+  repeated uint32 supported_batch_sizes = 5;
+  required uint64 weights_size = 6;
+  required uint32 num_weights_pages = 7;
+  required uint64 weights_load_time_nanos = 8;
+  repeated uint64 batch_size_exec_times_nanos = 9;
+}
+
+message GPUInfoProto {
+  required int32 id = 1;
+  required uint64 weights_cache_size = 2;
+  required int32 weights_cache_total_pages = 3;
+  repeated uint32 models = 4;
+  required uint64 io_pool_size = 5;
+  required uint64 workspace_pool_size = 6;
+}
+
+message WorkerMemoryInfoProto {
+  required uint64 page_size = 1;
+  required uint64 host_weights_cache_size = 2;
+  required uint64 host_io_pool_size = 3;
+  repeated GPUInfoProto gpus = 4;
+  repeated ModelInfoProto models = 5;
+}
+
+message GetWorkerStateResultProto {
+  required int32 action_id = 1;
+  required WorkerMemoryInfoProto worker_memory_info = 2;
+  required uint64 action_received = 3;
+  required uint64 result_sent = 4;
+}

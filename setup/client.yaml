@@ -1,0 +1,43 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: client
+spec:
+  nodeName: master
+  containers:
+  - name: clockwork
+    image: clockwork:local
+    imagePullPolicy: "Never"
+    resources:
+      limits:
+        nvidia.com/gpu: 0
+    volumeMounts:
+    - name: azure-functions-volume
+      mountPath: "/azure-functions" 
+    - name: clockwork-modelzoo-volta-volume
+      mountPath: "/clockwork-modelzoo-volta" 
+    - name: logs-volume
+      mountPath: "/logs"     
+    - name: shm-volume
+      mountPath: "/dev/shm"
+    securityContext:
+      privileged: true
+  volumes:
+  - name: azure-functions-volume
+    hostPath:
+      path: /home/hzq/azure-functions
+      type: DirectoryOrCreate
+  - name: clockwork-modelzoo-volta-volume
+    hostPath:
+      path: /home/hzq/clockwork-modelzoo-volta
+      type: DirectoryOrCreate
+  - name: logs-volume
+    hostPath:
+      path: /home/hzq/logs
+      type: DirectoryOrCreate 
+  - name: shm-volume
+    hostPath:
+      path: /dev/shm
+      
+  restartPolicy: Never
